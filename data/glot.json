@@ -1,0 +1,18 @@
+{
+	"title": {
+		"ja": "みんなでテイクアウト",
+		"en": "Take out together"
+	},
+	"zoomlevel": {
+		"ja": "ズームレベル：",
+		"en": "Zoom Level: "
+	},
+	"search": {
+		"ja": "この範囲内を検索",
+		"en": "Searching this area"
+	},
+	"controlmenu": {
+		"ja": "カスタマイズ",
+		"en": "Customize"
+	}
+}

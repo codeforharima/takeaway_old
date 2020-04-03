@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+	<meta charset="utf-8" />
+	<title>みんなでテイクアウト</title>
+	<meta property="og:url" content="https://k-sakanoshita.github.io/Takeaway/" />
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content="みんなでテイクアウト" />
+	<meta property="og:description" content="自由に印刷して配れる地図を作るサイト" />
+	<meta property="og:image" content="https://www.netfort.gr.jp/~saka/accessmap/image/thumbnail.png" />
+	<link rel="shortcut icon" href="favicon.ico" />
+	<link rel="stylesheet" href="takeaway.css" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.2/css/tempusdominus-bootstrap-4.min.css" />
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.css" />
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.65.2/dist/L.Control.Locate.min.css" />
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://cdn.maptiler.com/mapbox-gl-js/v1.5.1/mapbox-gl.css" />
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet-src.js"></script>
+	<script src="https://cdn.maptiler.com/mapbox-gl-js/v1.5.1/mapbox-gl.js"></script>
+	<script src="https://cdn.maptiler.com/mapbox-gl-leaflet/latest/leaflet-mapbox-gl.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.65.2/src/L.Control.Locate.min.js"></script>
+	<script src="https://unpkg.com/glottologist"></script>
+	<script src="./lib/osmtogeojson.js"></script>
+	<script src="./lib/leaflet-hash.js"></script>
+	<script src="./takeaway.js"></script>
+	<script src="./map-controls.js"></script>
+</head>
+
+<body>
+	<div id="container">
+		<header class="row d-flex align-items-center">
+			<div class="col-8 pl-1">
+				<h1><span glot-model="title"></span></h1>
+			</div>
+			<div class="col-4">
+			</div>
+		</header>
+		</header>
+		<article id="article">
+			<div id="mapid"></div>
+		</article>
+	</div>
+
+	<!-- モーダル用HTML -->
+	<div id="Progress_Modal" class="modal fade" tabindex="-1" role="dialog">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">マップデータのロード中</h4>
+				</div>
+				<div class="modal-body">
+					<p>サーバーからロード中です。しばらくお待ちください。</p>
+					<div class="progress">
+						<div id="Progress_Bar" class="progress-bar progress-bar-striped progress-bar-animated"
+							role="progressbar"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="MakeCancel_Modal" class="modal fade" tabindex="-1" role="dialog">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">地図を作るには、もう少しズームしてください。</h4>
+				</div>
+				<div class="modal-body">
+					<p>ズームレベル14から作ることが出来ます。更にズームすると建物や公園も作ることが出来ます。</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" data-dismiss="modal">分かりました</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+
+</html>
