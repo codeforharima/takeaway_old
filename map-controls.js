@@ -1,4 +1,3 @@
-/*	まち歩きマップメーカー Licence: MIT */
 "use strict";
 
 // make Layer
@@ -52,9 +51,9 @@ function MakeLayer(key) {
 					popupAnchor: [0, -10]
 				});
 				if (node.geometry.type == "Polygon") {
-					markers.push(L.marker(new L.LatLng(node.geometry.coordinates[0][0][1], node.geometry.coordinates[0][0][0]), { icon: icon, draggable: true }));
+					markers.push(L.marker(new L.LatLng(node.geometry.coordinates[0][0][1], node.geometry.coordinates[0][0][0]), { icon: icon, draggable: false }));
 				} else {
-					markers.push(L.marker(new L.LatLng(node.geometry.coordinates[1], node.geometry.coordinates[0]), { icon: icon, draggable: true }));
+					markers.push(L.marker(new L.LatLng(node.geometry.coordinates[1], node.geometry.coordinates[0]), { icon: icon, draggable: false }));
 				}
 				let del_btn = "<input type='button' value='アイコンを削除' onclick='DeleteMarker(\"" + key + "\"," + (markers.length - 1) + ")'></input>";
 				let chg_btn = "<input type='button' value='英語名に変更' onclick='ChgLngMarker(\"" + key + "\"," + (markers.length - 1) + ",\"name:en\")'></input>";
@@ -102,11 +101,11 @@ var ProgressBar = (function () {
 	return {
 		show: function (percent) {
 			$('#Progress_Bar').css('width', parseInt(percent) + "%");
-			$('#Progress_Modal').modal({ backdrop: "static", keyboard: false });
+			// $('#Progress_Modal').modal({ backdrop: "static", keyboard: false });
 		},
 		hide: function () {
 			$('#Progress_Bar').css('width', "0%");
-			$('#Progress_Modal').modal("hide");
+			// $('#Progress_Modal').modal("hide");
 		}
 	}
 })();
