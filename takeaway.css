@@ -212,7 +212,6 @@ span.icon{
 }
 
 .leaflet-control-container::after {
-	content: url("./image/cross.png");
 	z-index: 1000;
 	display: block;
 	position: absolute;
