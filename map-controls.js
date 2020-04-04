@@ -47,7 +47,7 @@ function MakeLayer(key) {
 				let tagname = node.properties.name == undefined ? "" : node.properties.name;
 				let icon = L.divIcon({
 					className: 'icon',
-					html: '<img class="icon" src="' + data.icon + '" icon-name="' + tagname + '"><span class="icon">' + tagname + '</span>',
+					html: '<img class="icon" src="' + data.icon + '" icon-name="' + tagname + '">',
 					popupAnchor: [0, -10]
 				});
 				if (node.geometry.type == "Polygon") {
@@ -109,33 +109,6 @@ var ProgressBar = (function () {
 		}
 	}
 })();
-
-// WriteText
-//params .svg:svg .text:text .size:font size  .color:color .background:background color
-function SVG_WriteText(params) {
-	let svgtext = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-	svgtext.setAttributeNS(null, 'x', params.x);
-	svgtext.setAttributeNS(null, 'y', params.y + 6);
-	svgtext.setAttributeNS(null, 'text-anchor', params.anchor);
-	svgtext.setAttributeNS(null, 'font-size', params.size + "px");
-	svgtext.setAttributeNS(null, 'font-family', params.font);
-	svgtext.setAttributeNS(null, 'fill', params.color);
-	svgtext.setAttributeNS(null, 'name', 'tempsvg');
-	svgtext.setAttributeNS(null, 'dominant-baseline', 'text-after-edge');
-	svgtext.textContent = params.text;
-	params.svg[0].appendChild(svgtext);
-
-	let SVGRect = svgtext.getBBox();
-	let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-	rect.setAttribute("x", SVGRect.x);
-	rect.setAttribute("y", SVGRect.y);
-	rect.setAttribute("width", SVGRect.width);
-	rect.setAttribute("height", SVGRect.height);
-	rect.setAttribute("fill", "white");
-	rect.setAttribute("fill-opacity", 0.9);
-	rect.setAttributeNS(null, 'name', 'tempsvg');
-	params.svg[0].insertBefore(rect, svgtext);
-}
 
 $.fn.extend({
 	// MakerをSVGに追加

@@ -23,27 +23,19 @@ const LeafContOpt = { collapsed: true };
 const darken_param = 0.5;
 
 const OverPass = {
-	SIG: ['node["highway"="traffic_signals"]'],
-	CFE: ['node["amenity"="cafe"]'],
-	RST: ['node["amenity"="restaurant"]', 'node["shop"="deli"]'],
-	FST: ['node["amenity"="fast_food"]', 'node["shop"="confectionery"]'],
-	EXT: ['node["emergency"="fire_extinguisher"]'],
-	HYD: ['node["emergency"="fire_hydrant"]'],
-	BNC: ['node["amenity"="bench"]'],
-	AED: ['node["emergency"="defibrillator"]'],
+	CFE: ['node["amenity"="cafe"]["takeaway"!="no"]["takeaway"]'],
+	RST: ['node["amenity"="restaurant"]["takeaway"!="no"]["takeaway"]', 'node["shop"="deli"]["takeaway"!="no"]["takeaway"]'],
+	FST: ['node["amenity"="fast_food"]["takeaway"!="no"]["takeaway"]', 'node["shop"="confectionery"]["takeaway"!="no"]["takeaway"]'],
+	VND: ['node["amenity"="vending_machine"]["vending"="drinks"]'],
 	LIB: ['node["amenity"="library"]', 'way["amenity"="library"]'],
 };
 
 const Defaults = {	// 制御情報の保管場所
-	SIG: { init: true, zoom: 16, type: "node", name: "信号関連", icon: "./image/signal.svg", size: [18, 34] },
-	CFE: { init: true, zoom: 16, type: "node", name: "カフェ等", icon: "./image/cafe.svg", size: [28, 28] },
-	RST: { init: true, zoom: 16, type: "node", name: "飲食店等", icon: "./image/restaurant.svg", size: [28, 28] },
-	FST: { init: true, zoom: 16, type: "node", name: "ファストフード", icon: "./image/fastfood.svg", size: [28, 28] },
-	EXT: { init: true, zoom: 15, type: "node", name: "消火器", icon: "./image/fire_extinguisher.svg", size: [28, 28] },
-	HYD: { init: true, zoom: 15, type: "node", name: "消火栓", icon: "./image/fire_hydrant.svg", size: [28, 28] },
-	BNC: { init: true, zoom: 15, type: "node", name: "ベンチ", icon: "./image/bench.svg", size: [28, 28] },
-	AED: { init: true, zoom: 15, type: "node", name: "AED", icon: "./image/aed.svg", size: [48, 48] },
-	LIB: { init: true, zoom: 14, type: "node", name: "図書館", icon: "./image/library.svg", size: [28, 28] },
+	CFE: { init: true, zoom: 14, type: "node", icon: "./image/bentou.svg", size: [28, 28] },
+	RST: { init: true, zoom: 14, type: "node", icon: "./image/bentou.svg", size: [28, 28] },
+	FST: { init: true, zoom: 14, type: "node", icon: "./image/bentou.svg", size: [28, 28] },
+	VND: { init: true, zoom: 16, type: "node", icon: "./image/vending.svg", size: [48, 48] },
+	LIB: { init: true, zoom: 12, type: "node", icon: "./image/library.svg", size: [28, 28] },
 };
 
 const LayerCounts = Object.keys(Defaults).length;
@@ -112,7 +104,7 @@ $(document).ready(function () {
 		container: 'map',
 		attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">© MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap contributors</a>',
 		accessToken: 'no-token',
-		style: 'https://api.maptiler.com/maps/streets/style.json?key=Eq2IyrHsOEGFU1W1fvd7'
+		style: 'https://api.maptiler.com/maps/3c10e59f-b7de-4ca9-b95b-75e30257f090/style.json?key=Eq2IyrHsOEGFU1W1fvd7'
 	}).addTo(map);
 
 });
