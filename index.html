@@ -29,7 +29,7 @@
 	<script src="./lib/osmtogeojson.js"></script>
 	<script src="./lib/leaflet-hash.js"></script>
 	<script src="./takeaway.js"></script>
-	<script src="./map-controls.js"></script>
+	<script src="./takeawayLib.js"></script>
 </head>
 
 <body>
@@ -42,29 +42,14 @@
 				<i class="fas fa-search"></i>
 			</div>
 		</header>
-		<div id="Progress_Bar" class="progress-bar progress-bar-striped progress-bar-animated" style="height: px;" role="progressbar"></div>
+		<div id="Progress_Bar" class="progress-bar progress-bar-striped progress-bar-animated" style="height: 2px;" role="progressbar"></div>
 		<article id="article">
 			<div id="mapid"></div>
 		</article>
 	</div>
 
 	<!-- モーダル用HTML -->
-	<div id="Progress_Modal" class="modal fade" tabindex="-1" role="dialog">
-		<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h4 class="modal-title">マップデータのロード中</h4>
-				</div>
-				<div class="modal-body">
-					<p>サーバーからロード中です。しばらくお待ちください。</p>
-					<div class="progress">
-						<!-- div id="Progress_Bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"></div -->
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
+	<div id="Modals"></div>
 </body>
 
 </html>
