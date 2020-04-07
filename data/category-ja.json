@@ -8,7 +8,8 @@
         "food_court": "フードコード",
         "ice_cream": "アイスクリーム",
         "pub": "パブ/居酒屋",
-        "restaurant": "レストラン"
+        "restaurant": "レストラン",
+        "vending_machine": "自動販売機"
     },
     "shop": {
         "alcohol": "酒屋",

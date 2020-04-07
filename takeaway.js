@@ -2,13 +2,13 @@
 "use strict";
 
 // Global Variable
-var map,gl,hash;				// map,gl,hash
+var map,gl,hash;			// map,gl,hash
 var Layer_Data = {};		// {key: {geojson,marker}}
 var LL = {};				// latlng
 var Categorys;
 
 const glot = new Glottologist();
-const MinZoomLevel = 14;		// これ未満のズームレベルでは地図は作らない
+const MinZoomLevel = 14;	// これ未満のズームレベルでは地図は作らない
 const OvGetError = "サーバーからのデータ取得に失敗しました。やり直してください。";
 const OvServer = 'https://overpass.kumi.systems/api/interpreter'	// or 'https://overpass-api.de/api/interpreter' or 'https://overpass.nchc.org.tw/api/interpreter'
 //const OvServer = 'https://overpass.nchc.org.tw/api/interpreter';
@@ -26,10 +26,14 @@ const Defaults = {	// 制御情報の保管場所
 	VND: { init: true, zoom: 16, icon: "./image/vending.svg", size: [28, 28] },
 	LIB: { init: true, zoom: 12, icon: "./image/library.svg", size: [28, 28] },
 };
+const DataList_Targets = ["TAK", "DEL", "LIB"]; 
 const LayerCounts = Object.keys(Defaults).length;
 
+// first initialize
+for (let key in Defaults) Layer_Data[key] = {};
+
 let jqXHRs = [];
-const FILES = ['modals.html','data/category.json'];
+const FILES = ['modals.html','data/category-ja.json'];
 for (let key in FILES) { jqXHRs.push($.get(FILES[key])) };
 $.when.apply($, jqXHRs).always(function () {
 	$("#Modals").html(arguments[0][0]);
@@ -40,7 +44,7 @@ $(document).ready(function () {
 	// initialize leaflet
 	console.log("Welcome to Takeaway.");
 	console.log("initialize leaflet.");
-	map = L.map('mapid', { center: [38.290, 138.988], zoom: 6 });
+	map = L.map('mapid', { center: [38.290, 138.988], zoom: 6, maxZoom: 20 });
 	gl = L.mapboxGL({
 		container: 'map',
 		attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">© MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap contributors</a>',
@@ -61,7 +65,7 @@ $(document).ready(function () {
 			default:
 				LL.busy = true;
 				LL.id = setTimeout(() => {
-					Takeaway.get();
+					Takeaway.get("", () => DataList.view(DataList_Targets));
 					LL.busy = false;
 				}, 1000);
 		};
@@ -87,6 +91,5 @@ $(document).ready(function () {
 
 	// etc
 	glot.import("./data/glot.json").then(() => { glot.render() });																// translation
-	for (let key in Defaults) Layer_Data[key] = {};
 
 });
