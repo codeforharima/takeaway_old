@@ -2,7 +2,7 @@
 "use strict";
 
 // Global Variable
-var map,gl,hash;			// map,gl,hash
+var map, gl, hash;			// map,gl,hash
 var Layer_Data = {};		// {key: {geojson,marker}}
 var LL = {};				// latlng
 var Categorys;
@@ -21,19 +21,19 @@ const OverPass = {
 	LIB: ['node["amenity"="library"]', 'way["amenity"="library"]'],
 };
 const Defaults = {	// 制御情報の保管場所
-	TAK: { init: true, zoom: 14, icon: "./image/bentou.svg", size: [28, 28] },
-	DEL: { init: true, zoom: 14, icon: "./image/bentou.svg", size: [28, 28] },
-	VND: { init: true, zoom: 16, icon: "./image/vending.svg", size: [28, 28] },
-	LIB: { init: true, zoom: 12, icon: "./image/library.svg", size: [28, 28] },
+	TAK: { init: true, zoom: 14, icon: "./image/bentou.svg" },
+	DEL: { init: true, zoom: 14, icon: "./image/bentou.svg" },
+	VND: { init: true, zoom: 16, icon: "./image/vending.svg" },
+	LIB: { init: true, zoom: 12, icon: "./image/library.svg" },
 };
-const DataList_Targets = ["TAK", "DEL", "LIB"]; 
+const DataList_Targets = ["TAK", "DEL", "LIB"];
 const LayerCounts = Object.keys(Defaults).length;
 
 // first initialize
 for (let key in Defaults) Layer_Data[key] = {};
 
 let jqXHRs = [];
-const FILES = ['modals.html','data/category-ja.json'];
+const FILES = ['modals.html', 'data/category-ja.json'];
 for (let key in FILES) { jqXHRs.push($.get(FILES[key])) };
 $.when.apply($, jqXHRs).always(function () {
 	$("#Modals").html(arguments[0][0]);
@@ -72,10 +72,10 @@ $(document).ready(function () {
 	});
 
 	map.on('styleimagemissing', function (e) {
-		var id = e.id,prefix = 'square-rgb-';
+		var id = e.id, prefix = 'square-rgb-';
 		if (id.indexOf(prefix) !== 0) return;
 		var rgb = id.replace(prefix, '').split(',').map(Number);
-		var width = 1,bytesPerPixel = 1;
+		var width = 1, bytesPerPixel = 1;
 		var data = new Uint8Array(width * width * bytesPerPixel);
 		for (var x = 0; x < width; x++) {
 			for (var y = 0; y < width; y++) {

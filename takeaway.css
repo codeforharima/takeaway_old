@@ -118,3 +118,8 @@ span.icon{
 	line-height: 1.0;
 	opacity: 0.7;
 }
+
+.modal-backdrop {
+  background-color: initial !important;
+  opacity: 1 !important;
+}

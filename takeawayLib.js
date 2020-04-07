@@ -16,17 +16,45 @@ var Takeaway = (function () {
 			OvPassCnt.get(targets).then(geojson => {
 				targets.forEach(key => { Layer_Data[key].geojson = geojson[key] });
 				Takeaway.update();
-				console.log("Takeaway: get end");
+				console.log("Takeaway: get end.");
 				callback();
-			}) //.catch((jqXHR, statusText, errorThrown)=> {
-			//		console.log("Takeaway: Error. " + statusText);
-			//	});
+			}) //.catch((jqXHR, statusText, errorThrown) => {
+			//	console.log("Takeaway: Error. " + statusText);
+			//});
+		},
+
+		// Update Takeout Map Icon
+		update: function (targetkey) {
+			let ZoomLevel = map.getZoom();
+			if (targetkey == "" || typeof (targetkey) == "undefined") {		// no targetkey then update all layer
+				for (let key in Defaults) {
+					Marker.all_delete(key);
+					if (Defaults[key].zoom <= ZoomLevel) Marker.set(key);
+				}
+			} else {
+				Marker.all_delete(targetkey);
+				if (Defaults[targetkey].zoom <= ZoomLevel) Marker.set(targetkey);
+			}
 		},
 
 		view: function (tags) {
+			DataList.select(tags.id);
+
 			$("#name").html(tags.name == null ? "" : tags.name);
 			$("#category").html(Takeaway.get_catname(tags));
-			$("#opening_hours").html(tags.opening_hours == null ? "" : tags.opening_hours);
+			let openhour = tags.opening_hours == null ? "" : tags.opening_hours;
+			openhour = openhour.replace(/Mo/g, "月");
+			openhour = openhour.replace(/Tu/g, "火");
+			openhour = openhour.replace(/We/g, "水");
+			openhour = openhour.replace(/Th/g, "木");
+			openhour = openhour.replace(/Fr/g, "金");
+			openhour = openhour.replace(/Sa/g, "土");
+			openhour = openhour.replace(/Su/g, "日");
+			openhour = openhour.replace(/;/g, "<br>");
+			openhour = openhour.replace(/PH/g, "祝日");
+			openhour = openhour.replace(/off/g, "休業");
+			openhour = openhour.replace(/24\/7/g, "24時間営業");
+			$("#opening_hours").html(openhour);
 
 			let delname = tags.delivery == null ? "" : Categorys.delivery[tags.delivery];
 			$("#delivery").html(delname);
@@ -46,20 +74,10 @@ var Takeaway = (function () {
 
 			$("#description").html(tags.description == null ? "" : tags.description);
 
-			$('#PoiView_Modal').modal({ backdrop: false, keyboard: false });
-		},
-
-		// Update Access Map(color/lime weight change)
-		update: function (targetkey) {
-			if (targetkey == "" || typeof (targetkey) == "undefined") {		// no targetkey then update all layer
-				for (let key in Defaults) {
-					Marker.all_delete(key);
-					Marker.set(key);
-				}
-			} else {
-				Marker.all_delete(targetkey);
-				Marker.set(targetkey);
-			}
+			$('#PoiView_Modal').modal({ backdrop: 'static', keyboard: true });
+			$('#PoiView_Modal').one('hidePrevented.bs.modal', function (e) { 
+				$('#PoiView_Modal').modal('hide');
+			});
 		},
 
 		// get Category Name from Categorys(Global Variable)
@@ -103,11 +121,7 @@ var OvPassCnt = (function () {
 					// Within Cache range
 					console.log("OvPassCnt: Cache Hit.");
 					let RetCache = {};
-					targets.forEach(key => {
-						if (Defaults[key].init && Defaults[key].zoom <= ZoomLevel) {
-							RetCache[key] = Cache[key];
-						}
-					});
+					targets.forEach(key => { RetCache[key] = Cache[key] });
 					resolve(RetCache);
 
 				} else {
@@ -126,28 +140,24 @@ var OvPassCnt = (function () {
 
 					let jqXHRs = [], Progress = 0;
 					targets.forEach(key => {
-						if (Defaults[key].init && Defaults[key].zoom <= ZoomLevel) {
-							let query = "";
-							for (let ovpass in OverPass[key]) { query += OverPass[key][ovpass] + maparea; }
-							let url = OvServer + '?data=[out:json][timeout:30];(' + query + ');out body;>;out skel qt;';
-							// console.log("GET: " + url);
-							jqXHRs.push($.get(url, () => { ProgressBar.show(Math.ceil(((++Progress + 1) * 100) / LayerCounts)) }));
-						};
+						let query = "";
+						for (let ovpass in OverPass[key]) { query += OverPass[key][ovpass] + maparea; }
+						let url = OvServer + '?data=[out:json][timeout:30];(' + query + ');out body;>;out skel qt;';
+						// console.log("GET: " + url);
+						jqXHRs.push($.get(url, () => { ProgressBar.show(Math.ceil(((++Progress + 1) * 100) / LayerCounts)) }));
 					});
 					$.when.apply($, jqXHRs).done(function () {
 						let i = 0;
 						targets.forEach(key => {
-							if (Defaults[key].init && Defaults[key].zoom <= ZoomLevel) {
-								let arg = arguments[0][1] == undefined ? arguments[1] : arguments[i][1];
-								if (arg !== "success") { alert(OvGetError); reject() };
-								let osmxml = arguments[i++][0]
-								let geojson = osmtogeojson(osmxml, { flatProperties: true });
-								geojson.features.forEach(function (val) { delete val.id; }); // delete Unnecessary osmid
-								geojson = geojson.features.filter(val => {
-									if (Takeaway.get_catname(val.properties) !== "") return val;
-								});
-								Cache[key] = { "features": geojson };
-							}
+							let arg = arguments[0][1] == undefined ? arguments[1] : arguments[i][1];
+							if (arg !== "success") { alert(OvGetError); reject() };
+							let osmxml = arguments[i++][0]
+							let geojson = osmtogeojson(osmxml, { flatProperties: true });
+							geojson.features.forEach(function (val) { delete val.id; }); // delete Unnecessary osmid
+							geojson = geojson.features.filter(val => {
+								if (Takeaway.get_catname(val.properties) !== "") return val;
+							});
+							Cache[key] = { "features": geojson };
 						});
 						console.log("OvPassCnt: Cache Update");
 						resolve(Cache);
@@ -161,7 +171,7 @@ var OvPassCnt = (function () {
 	};
 })();
 
-// make LMarker
+// make Marker
 var Marker = (function () {
 	const PointUp = { radius: 6, color: 'blue', fillColor: '#000080', fillOpacity: 0.2 };
 	var latlngs = {};
@@ -207,6 +217,13 @@ var Marker = (function () {
 					})
 				};
 			});
+			datas.sort((a, b) => {
+				if (a.between > b.between) {
+					return 1;
+				} else {
+					return -1;
+				}
+			})
 			return datas;
 		},
 
@@ -255,20 +272,22 @@ var DataList = (function () {
 				"scrollY": $("#dataid").height() + "px"
 			});
 			table.row(0).select();
-
-			table.on('select', function (e, dt, type, indexes) {
-				if (type === 'row') {
-					var data = table.rows(indexes).data();
-					console.log(data[0]);
-					Marker.center(data[0].osmid);
-					// do something with the ID of the selected items
-				}
+			table.one('select', function (e, dt, type, indexes) {
+				var data = table.rows(indexes).data();
+				console.log(data[0]);
+				Marker.center(data[0].osmid);	// do something with the ID of the selected items
 			});
 		},
 
 		select: function (osmid) {	// アイコンをクリックした時にデータを選択
 			table.rows().deselect();
-			let index = table.column(0).data().indexOf(parseInt(osmid));
+			let datas = table.data(),index = 0;
+			for (let i in datas) {
+				if (datas[i].osmid == osmid) {
+					index = i;
+					break;
+				} 
+			}
 			if (index >= 0) {
 				table.row(index).select();
 				table.row(index).node().scrollIntoView(true);
