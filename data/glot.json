@@ -3,8 +3,16 @@
 		"ja": "みんなでテイクアウトMAP",
 		"en": "Takeout MAP with everyone"
 	},
-	"search": {
-		"ja": "この範囲内を検索",
-		"en": "Searching this area"
+	"outdoor_seating_": {
+		"ja": "-",
+		"en": "-"
+	},
+	"outdoor_seating_yes": {
+		"ja": "あり",
+		"en": "yes"
+	},
+	"outdoor_seating_no": {
+		"ja": "なし",
+		"en": "no"
 	}
 }

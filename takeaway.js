@@ -2,17 +2,21 @@
 "use strict";
 
 // Global Variable
-var map, gl, hash;			// map,gl,hash
-var Layer_Data = {};		// {key: {geojson,marker}}
-var LL = {};				// latlng
-var Categorys;
+var map, gl, hash, timeout = 0;	// map,gl,hash,search timeout
+var Layer_Data = {};			// {key: {geojson,marker}}
+var LL = {};					// latlng
+var Categorys,DatatablesLang;
+var glot;
 
-const glot = new Glottologist();
+// consts
 const MinZoomLevel = 14;	// これ未満のズームレベルでは地図は作らない
+const MoreZoomMsg = "ズームすると店舗が表示されます。";
 const OvGetError = "サーバーからのデータ取得に失敗しました。やり直してください。";
 const OvServer = 'https://overpass.kumi.systems/api/interpreter'	// or 'https://overpass-api.de/api/interpreter' or 'https://overpass.nchc.org.tw/api/interpreter'
 //const OvServer = 'https://overpass.nchc.org.tw/api/interpreter';
 const OvServer_Org = 'https://overpass-api.de/api/interpreter';	// 本家(更新が早い)
+const RegexPTN = [[/Mo/g, "月"], [/Tu/g, "火"], [/We/g, "水"], [/Th/g, "木"], [/Fr/g, "金"], [/Sa/g, "土"], [/Su/g, "日"], [/;/g, "<br>"], [/PH/g, "祝日"], [/off/g, "休業"], [/24\/7/g, "24時間営業"]];
+const FILES = ['modals.html', 'data/category-ja.json','data/datatables-ja.json'];
 
 const OverPass = {
 	TAK: ['node["takeaway"!="no"]["takeaway"]', 'way["takeaway" != "no"]["takeaway"]'],
@@ -23,26 +27,47 @@ const OverPass = {
 const Defaults = {	// 制御情報の保管場所
 	TAK: { init: true, zoom: 14, icon: "./image/bentou.svg" },
 	DEL: { init: true, zoom: 14, icon: "./image/bentou.svg" },
-	VND: { init: true, zoom: 16, icon: "./image/vending.svg" },
-	LIB: { init: true, zoom: 12, icon: "./image/library.svg" },
+	VND: { init: true, zoom: 17, icon: "./image/vending.svg" },
+	LIB: { init: true, zoom: 14, icon: "./image/library.svg" },
 };
 const DataList_Targets = ["TAK", "DEL", "LIB"];
-const LayerCounts = Object.keys(Defaults).length;
 
-// first initialize
-for (let key in Defaults) Layer_Data[key] = {};
+// Welcome Message
+console.log("Welcome to Takeaway.");
 
-let jqXHRs = [];
-const FILES = ['modals.html', 'data/category-ja.json'];
+let jqXHRs = [];	// file load
 for (let key in FILES) { jqXHRs.push($.get(FILES[key])) };
 $.when.apply($, jqXHRs).always(function () {
 	$("#Modals").html(arguments[0][0]);
 	Categorys = arguments[1][0];
+	DatatablesLang = arguments[2][0];
 });
 
 $(document).ready(function () {
+	// Set Window Size
+	console.log("Window Width: " + window.innerWidth);
+	let use_H, magni = window.innerWidth < 768 ? 0.7 : 1;
+	switch (magni) {
+		case 1:		// 横画面
+			use_H = window.innerHeight - 40;
+			$("#mapid").css("height", Math.round(use_H * magni) + "px");
+			$("#dataid").css("height", (window.innerHeight - 84) + "px");
+			break;
+
+		default:	// 縦画面
+			use_H = window.innerHeight - 84;
+			let map_H = Math.round(use_H * magni);
+			let dat_H = use_H - map_H;
+			$("#mapid").css("height", map_H + "px");
+			$("#dataid").css("height", dat_H + "px");
+			break;
+	}
+
+	// initialize variable
+	glot = new Glottologist();
+	for (let key in Defaults) Layer_Data[key] = {};
+
 	// initialize leaflet
-	console.log("Welcome to Takeaway.");
 	console.log("initialize leaflet.");
 	map = L.map('mapid', { center: [38.290, 138.988], zoom: 6, maxZoom: 20 });
 	gl = L.mapboxGL({
@@ -53,10 +78,12 @@ $(document).ready(function () {
 	}).addTo(map);
 	map.zoomControl.setPosition("bottomright");
 	hash = new L.Hash(map);
-	let lc = L.control.locate({ position: 'bottomright', strings: { title: "現在地を表示" }, locateOptions: { maxZoom: 16 } }).addTo(map);
+	L.control.locate({ position: 'bottomright', strings: { title: "現在地を表示" }, locateOptions: { maxZoom: 16 } }).addTo(map);
 	L.control.scale({ imperial: false, maxWidth: 200 }).addTo(map);
 
+	// マップ移動時の処理
 	map.on('moveend', function (e) {
+		console.log("moveend: event start.");
 		LL.NW = map.getBounds().getNorthWest();
 		LL.SE = map.getBounds().getSouthEast();
 		switch (LL.busy) {
@@ -65,12 +92,26 @@ $(document).ready(function () {
 			default:
 				LL.busy = true;
 				LL.id = setTimeout(() => {
-					Takeaway.get("", () => DataList.view(DataList_Targets));
+					Takeaway.get("", () => {
+						DataList.lock(true);
+						DataList.view(DataList_Targets);
+						DataList.lock(false);
+					});
 					LL.busy = false;
 				}, 1000);
 		};
 	});
 
+	// ズーム時のメッセージ表示
+	map.on('zoomend', function (e) {
+		if (map.getZoom() < MinZoomLevel) {
+			DisplayStatus.morezoom(MoreZoomMsg);
+		} else {
+			DisplayStatus.morezoom("");
+		}
+	});
+
+	// スタイル不足時のエラー回避
 	map.on('styleimagemissing', function (e) {
 		var id = e.id, prefix = 'square-rgb-';
 		if (id.indexOf(prefix) !== 0) return;
@@ -92,4 +133,33 @@ $(document).ready(function () {
 	// etc
 	glot.import("./data/glot.json").then(() => { glot.render() });																// translation
 
+	let keyword = document.getElementById("keyword");
+	keyword.addEventListener("input", (e) => {
+		if (timeout > 0) {
+			window.clearTimeout(timeout);
+			timeout = 0;
+		};
+		timeout = window.setTimeout(() => DataList.filter(e.target.value), 500);
+	});
+
+	window.onresize = window_resize;
 });
+
+function window_resize() {
+	let use_H, magni = window.innerWidth < 768 ? 0.7 : 1;
+	switch (magni) {
+		case 1:		// 横画面
+			use_H = window.innerHeight - 40;
+			$("#mapid").css("height", Math.round(use_H * magni) + "px");
+			$("#dataid").css("height", (window.innerHeight - 84) + "px");
+			break;
+
+		default:	// 縦画面
+			use_H = window.innerHeight - 84;
+			let map_H = Math.round(use_H * magni);
+			let dat_H = use_H - map_H;
+			$("#mapid").css("height", map_H + "px");
+			$("#dataid").css("height", dat_H + "px");
+			break;
+	};
+}

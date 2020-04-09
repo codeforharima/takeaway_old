@@ -2,25 +2,36 @@
 
 var Takeaway = (function () {
 
+	var _status = "";
+	const OUTSEETS = ["yes", "no"];	// outseetタグ用
+
 	return {
+		status: () => { return _status },				// ステータスを返す
 		get: function (keys, callback) {				// 情報（アイコンなど）を地図に追加
 			console.log("Takeaway: get start...");
+			_status = "get";
 			var targets = [];
 			if (keys == undefined || keys == "") {
 				for (let key in Defaults) targets.push(key);
 			} else {
 				targets = keys;
 			};
-			if (map.getZoom() < MinZoomLevel) { console.log("MinZoomLevel..."); return false; }
-
-			OvPassCnt.get(targets).then(geojson => {
-				targets.forEach(key => { Layer_Data[key].geojson = geojson[key] });
+			if (map.getZoom() < MinZoomLevel) {
+				console.log("MinZoomLevel...");
 				Takeaway.update();
-				console.log("Takeaway: get end.");
+				_status = "";
 				callback();
-			}) //.catch((jqXHR, statusText, errorThrown) => {
-			//	console.log("Takeaway: Error. " + statusText);
-			//});
+			} else {
+				OvPassCnt.get(targets).then(geojson => {
+					targets.forEach(key => { Layer_Data[key].geojson = geojson[key] });
+					Takeaway.update();
+					console.log("Takeaway: get end.");
+					_status = "";
+					callback();
+				}).catch((jqXHR, statusText, errorThrown) => {
+					console.log("Takeaway: Error. " + statusText);
+				});
+			}
 		},
 
 		// Update Takeout Map Icon
@@ -38,33 +49,23 @@ var Takeaway = (function () {
 		},
 
 		view: function (tags) {
+			_status = "view";
 			DataList.select(tags.id);
 
+			$("#osmid").html(tags.id);
 			$("#name").html(tags.name == null ? "" : tags.name);
 			$("#category").html(Takeaway.get_catname(tags));
+
 			let openhour = tags.opening_hours == null ? "" : tags.opening_hours;
-			openhour = openhour.replace(/Mo/g, "月");
-			openhour = openhour.replace(/Tu/g, "火");
-			openhour = openhour.replace(/We/g, "水");
-			openhour = openhour.replace(/Th/g, "木");
-			openhour = openhour.replace(/Fr/g, "金");
-			openhour = openhour.replace(/Sa/g, "土");
-			openhour = openhour.replace(/Su/g, "日");
-			openhour = openhour.replace(/;/g, "<br>");
-			openhour = openhour.replace(/PH/g, "祝日");
-			openhour = openhour.replace(/off/g, "休業");
-			openhour = openhour.replace(/24\/7/g, "24時間営業");
+			RegexPTN.forEach(val => { openhour = openhour.replace(val[0], val[1]) });
 			$("#opening_hours").html(openhour);
 
 			let delname = tags.delivery == null ? "" : Categorys.delivery[tags.delivery];
 			$("#delivery").html(delname);
 
-			let outseet = "";
-			switch (tags.outdoor_seating) {
-				case "yes": outseet = "あり"; break;
-				case "no": outseet = "なし"; break;
-			};
+			let outseet = OUTSEETS.indexOf(tags.outdoor_seating) < 0 ? "" : tags.outdoor_seating;
 			$("#outdoor_seating").html(outseet);
+			$("#outdoor_seating").attr("glot-model", "outdoor_seating_" + outseet);
 
 			$("#phone").attr('href', tags.phone == null ? "" : "tel:" + tags.phone);
 			$("#phone_view").html(tags.phone == null ? "" : tags.phone);
@@ -74,10 +75,18 @@ var Takeaway = (function () {
 
 			$("#description").html(tags.description == null ? "" : tags.description);
 
+			glot.render();
 			$('#PoiView_Modal').modal({ backdrop: 'static', keyboard: true });
-			$('#PoiView_Modal').one('hidePrevented.bs.modal', function (e) { 
+			$('#PoiView_Modal').one('hidePrevented.bs.modal', function (e) {
+				_status = "";
 				$('#PoiView_Modal').modal('hide');
 			});
+		},
+
+		openmap: osmid => {
+			let latlng = Marker.get(osmid);
+			let zoom = map.getZoom();
+			window.open('https://www.google.com/maps/@' + latlng.lat + ',' + latlng.lng + ',' + zoom + 'z');
 		},
 
 		// get Category Name from Categorys(Global Variable)
@@ -116,6 +125,7 @@ var OvPassCnt = (function () {
 		get: function (targets) {
 			return new Promise((resolve, reject) => {
 				let ZoomLevel = map.getZoom();
+				let LayerCounts = Object.keys(Defaults).length;
 				if (LL.NW.lat < LLc.NW.lat && LL.NW.lng > LLc.NW.lng &&
 					LL.SE.lat > LLc.SE.lat && LL.NW.lat < LLc.NW.lat) {
 					// Within Cache range
@@ -126,9 +136,9 @@ var OvPassCnt = (function () {
 
 				} else {
 					// Not With Cache range
-					ProgressBar.show(0);
+					DisplayStatus.progress(0);
 					Cache = {};	// Cache Clear
-					let magni = (ZoomLevel - MinZoomLevel) < 1 ? 1 : (ZoomLevel - MinZoomLevel) / 2;
+					let magni = (ZoomLevel - MinZoomLevel) < 1 ? 0.25 : (ZoomLevel - MinZoomLevel) / 2;
 					let offset_lat = (LL.NW.lat - LL.SE.lat) * magni;
 					let offset_lng = (LL.SE.lng - LL.NW.lng) * magni;
 					let SE_lat = LL.SE.lat - offset_lat;
@@ -144,7 +154,7 @@ var OvPassCnt = (function () {
 						for (let ovpass in OverPass[key]) { query += OverPass[key][ovpass] + maparea; }
 						let url = OvServer + '?data=[out:json][timeout:30];(' + query + ');out body;>;out skel qt;';
 						// console.log("GET: " + url);
-						jqXHRs.push($.get(url, () => { ProgressBar.show(Math.ceil(((++Progress + 1) * 100) / LayerCounts)) }));
+						jqXHRs.push($.get(url, () => { DisplayStatus.progress(Math.ceil(((++Progress + 1) * 100) / LayerCounts)) }));
 					});
 					$.when.apply($, jqXHRs).done(function () {
 						let i = 0;
@@ -160,6 +170,7 @@ var OvPassCnt = (function () {
 							Cache[key] = { "features": geojson };
 						});
 						console.log("OvPassCnt: Cache Update");
+						DisplayStatus.progress(0);
 						resolve(Cache);
 					}).fail(function (jqXHR, statusText, errorThrown) {
 						console.log(statusText);
@@ -173,10 +184,11 @@ var OvPassCnt = (function () {
 
 // make Marker
 var Marker = (function () {
-	const PointUp = { radius: 6, color: 'blue', fillColor: '#000080', fillOpacity: 0.2 };
+	const PointUp = { radius: 8, color: '#000080', fillColor: '#0000A0', Opacity: 0.1, fillOpacity: 0.1 };
 	var latlngs = {};
 
 	return {
+		get: osmid => { return latlngs[osmid] },
 		set: function (key) {
 			let geojson = Layer_Data[key].geojson;
 			let markers = [];
@@ -228,32 +240,27 @@ var Marker = (function () {
 		},
 
 		center: function (osmid) {
-			map.panTo(latlngs[osmid]);
+			map.panTo(latlngs[osmid], { animate: true, easeLinearity: 0.1, duration: 0.5 });
 			let circle = L.circle(latlngs[osmid], PointUp).addTo(map);
-			setTimeout(() => map.removeLayer(circle), 5000);
+			setTimeout(() => map.removeLayer(circle), 2000);
 		}
 	}
 })();
 
 // PoiDatalist管理
 var DataList = (function () {
-	var table;
+	var table, _status = "", _lock = false;
 
 	return {
-		table: function () {
-			return table;
-		},
-
-		view: function (targets) {		// PoiDataのリスト表示
-			if (table !== undefined) {
-				table.off('select');
-				table.destroy();
-			};
-
+		status: () => { return _status },		// statusを返す
+		table: () => { return table },			// tableを返す
+		lock: mode => { _lock = mode },			// DataListをロック(true) or 解除(false)とする
+		view: function (targets) {				// PoiDataのリスト表示
+			if (table !== undefined) table.destroy();
 			let result = Marker.list(targets);
 			table = $('#tableid').DataTable({
 				"autoWidth": true,
-				"columns": [{ title: "名前", data: "name" }, { title: "種類", data: "category" }, { title: "中心からの距離", data: "between" },],
+				"columns": [{ title: "名前", data: "name", "width": "40%" }, { title: "種類", data: "category", "width": "30%" }, { title: "距離", data: "between", "width": "20%" },],
 				"columnDefs": [{ targets: 2, render: $.fn.dataTable.render.number(',', '.', 0, '', 'm') }],
 				"data": result,
 				"processing": true,
@@ -261,55 +268,70 @@ var DataList = (function () {
 				"destroy": true,
 				"deferRender": true,
 				"dom": 't',
-				"order": [[2, "asc"]],
-				"ordering": true,
+				"language": DatatablesLang,
+				"order": [2, 'asc'],
+				"ordering": false,
 				"orderClasses": false,
 				"paging": true,
 				"processing": false,
 				"pageLength": 100000,
-				"select": true,
+				"select": 'single',
 				"scrollCollapse": true,
-				"scrollY": $("#dataid").height() + "px"
+				"scrollY": ($("#dataid").height() - 27) + "px"
 			});
-			table.row(0).select();
-			table.one('select', function (e, dt, type, indexes) {
-				var data = table.rows(indexes).data();
-				console.log(data[0]);
-				Marker.center(data[0].osmid);	// do something with the ID of the selected items
+			let osmid = table.row(0).data() == undefined ? undefined : table.row(0).data().osmid;
+			if (osmid !== undefined) DataList.select(osmid);	// osmidがあれば1行目を選択
+
+			table.on('select', function (e, dt, type, indexes) {
+				if (_lock) {
+					table.row(indexes).deselect();
+				} else if (_status == "") {
+					var data = table.row(indexes).data();
+					table.off('select');
+					Marker.center(data.osmid);	// do something with the ID of the selected items
+				}
 			});
 		},
 
 		select: function (osmid) {	// アイコンをクリックした時にデータを選択
+			_status = "select";
 			table.rows().deselect();
-			let datas = table.data(),index = 0;
+			let datas = table.data(), index = 0;
 			for (let i in datas) {
 				if (datas[i].osmid == osmid) {
 					index = i;
 					break;
-				} 
-			}
+				};
+			};
 			if (index >= 0) {
 				table.row(index).select();
 				table.row(index).node().scrollIntoView(true);
 			}
+			_status = "";
 		},
-
-		filter: function (KEYWORD) {
-			table.search(KEYWORD).draw();
-		}
+		filter: KEYWORD => { table.search(KEYWORD).draw() }		// キーワード検索
 	}
 })();
 
-// Progress Bar
-var ProgressBar = (function () {
+// Display Status(progress&message)
+var DisplayStatus = (function () {
 	return {
-		show: function (percent) {
+		progress: percent => {
+			percent = percent == 0 ? 1 : percent;
 			$('#Progress_Bar').css('width', parseInt(percent) + "%");
-			// $('#Progress_Modal').modal({ backdrop: "static", keyboard: false });
 		},
-		hide: function () {
-			$('#Progress_Bar').css('width', "0%");
-			// $('#Progress_Modal').modal("hide");
+		morezoom: message => {
+			if (!$("#morezoom").length) {
+				let morezoom = L.control({ position: "topleft" });
+				morezoom.onAdd = function (map) {
+					this.ele = L.DomUtil.create('div', "morezoom");
+					this.ele.id = "morezoom";
+					return this.ele;
+				};
+				morezoom.addTo(map);
+			};
+			$("#morezoom").html("<h1>" + message + "</h1>");
 		}
 	}
 })();
+
