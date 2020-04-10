@@ -1,12 +1,13 @@
 {
-	"amenity": {
+    "filter_targets":["amenity","shop"],
+    "amenity": {
         "library": "図書館",
         "bar":"バー/酒場",
         "cafe":"カフェ/喫茶店",
         "drinking_water":"給水所/水栓",
         "fast_food": "ファーストフード",
-        "food_court": "フードコード",
-        "ice_cream": "アイスクリーム",
+        "food_court": "フードコート",
+        "ice_cream": "アイスクリーム店",
         "pub": "パブ/居酒屋",
         "restaurant": "レストラン",
         "vending_machine": "自動販売機"

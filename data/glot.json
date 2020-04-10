@@ -1,7 +1,15 @@
 {
 	"title": {
-		"ja": "みんなでテイクアウトMAP",
-		"en": "Takeout MAP with everyone"
+		"ja": "みんなでテイクアウトMAP <草津版>",
+		"en": "Takeout MAP with everyone <Kusatsu Ver>"
+	},
+	"data_edit": {
+		"ja": "店舗編集",
+		"en": "EDIT"
+	},
+	"edit_mapcontrib": {
+		"ja": "店舗編集",
+		"en": "edit data"
 	},
 	"outdoor_seating_": {
 		"ja": "-",
@@ -14,5 +22,13 @@
 	"outdoor_seating_no": {
 		"ja": "なし",
 		"en": "no"
+	},
+	"modal_title": {
+		"ja": "テイクアウト詳細情報",
+		"en": "Detailed information"
+	},
+	"modal_close": {
+		"ja": "閉じる",
+		"en": "OK"
 	}
 }
