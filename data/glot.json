@@ -1,34 +1,42 @@
 {
-	"title": {
-		"ja": "みんなでテイクアウトMAP <草津版>",
-		"en": "Takeout MAP with everyone <Kusatsu Ver>"
-	},
-	"data_edit": {
-		"ja": "店舗編集",
-		"en": "EDIT"
-	},
-	"edit_mapcontrib": {
-		"ja": "店舗編集",
-		"en": "edit data"
-	},
-	"outdoor_seating_": {
-		"ja": "-",
-		"en": "-"
-	},
-	"outdoor_seating_yes": {
-		"ja": "あり",
-		"en": "yes"
-	},
-	"outdoor_seating_no": {
-		"ja": "なし",
-		"en": "no"
-	},
-	"modal_title": {
-		"ja": "テイクアウト詳細情報",
-		"en": "Detailed information"
-	},
-	"modal_close": {
-		"ja": "閉じる",
-		"en": "OK"
-	}
+    "title": {
+        "ja": "みんなでテイクアウトMAP <草津版>",
+        "en": "Takeout MAP with everyone <Kusatsu Ver>"
+    },
+    "data_edit": {
+        "ja": "店舗編集",
+        "en": "EDIT"
+    },
+    "edit_manual": {
+        "ja": "店舗登録/修正マニュアル",
+        "en": "Store edit manual"
+    },
+    "edit_mapcontrib": {
+        "ja": "(α版)スマホ向け簡易編集ツール",
+        "en": "(Alpha ver)Editing tool for smartphone"
+    },
+    "outdoor_seating_": {
+        "ja": "-",
+        "en": "-"
+    },
+    "outdoor_seating_yes": {
+        "ja": "あり",
+        "en": "yes"
+    },
+    "outdoor_seating_no": {
+        "ja": "なし",
+        "en": "no"
+    },
+    "modal_title": {
+        "ja": "テイクアウト詳細情報",
+        "en": "Detailed information"
+    },
+    "modal_close": {
+        "ja": "閉じる",
+        "en": "OK"
+    },
+    "about": {
+        "ja": "Code for Kusatsuについて",
+        "en": "about Code for Kusatsu"
+    }
 }

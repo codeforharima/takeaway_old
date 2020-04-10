@@ -38,11 +38,11 @@
 <body>
     <div id="container">
         <header class="row d-flex align-items-center">
-            <nav class="navbar navbar-expand-lg navbar-light pl-1 pt-0 pr-0 col-9 mt-1" style="overflow-x: scroll;">
-                <a class="navbar-brand " href="#">
+            <nav class="navbar navbar-expand-lg navbar-light pl-1 pt-0 pr-0 col-9 mt-1">
+                <a class="navbar-brand" href="#">
                     <h1 style="color: white;">
                         <img src="./image/bentou.svg" class="d-inline-block align-top" height="20">
-                        <span glot-model="title" class="align-middle"></span>
+                        <span glot-model="title" class="align-middle" style="text-overflow: ellipsis;"></span>
                     </h1>
                 </a>
             </nav>
@@ -50,9 +50,9 @@
                 <button type="button" class="nav-item btn btn-sm dropdown-toggle float-right" style="height: 30px; margin: 4px;" data-toggle="dropdown">
 					<span glot-model="data_edit" class="menu"></span></button>
                 <div class="dropdown-menu dropdown-menu-right">
-                    <a class="dropdown-item" href="https://github.com/maripo/osm_beginners_guide/blob/master/index.md" target="_blank">店舗登録/修正マニュアル</a>
-                    <a class="dropdown-item" href="https://www.mapcontrib.xyz/t/1c17e9" target="_blank">(α版)スマホ向け簡易編集ツール</a>
-                    <a class="dropdown-item" href="https://codeforkusatsu.org/" target="_blank">Code for Kusatsuについて</a>
+                    <a class="dropdown-item" href="https://github.com/maripo/osm_beginners_guide/blob/master/index.md" target="_blank"><span glot_model="edit_manual"></span></a>
+                    <a class="dropdown-item" href="https://www.mapcontrib.xyz/t/1c17e9" target="_blank"><span glot-model="edit_mapcontrib"></span></a>
+                    <a class="dropdown-item" href="https://codeforkusatsu.org/" target="_blank"><span glot-model="about"></span></a>
                 </div>
             </div>
         </header>

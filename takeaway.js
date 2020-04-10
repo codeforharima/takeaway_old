@@ -49,15 +49,21 @@ const DataList_Targets = ["TAK", "DEL", "LIB"];
 // Welcome Message
 console.log("Welcome to Takeaway.");
 
-let jqXHRs = []; // file load
-for (let key in FILES) { jqXHRs.push($.get(FILES[key])) };
-$.when.apply($, jqXHRs).always(function() {
-    $("#Modals").html(arguments[0][0]);
-    Jsons = { "category": arguments[1][0], "datatables_lang": arguments[2][0] };
-    DataList.init();
-});
-
 $(document).ready(function() {
+
+    // file load
+    let jqXHRs = [];
+    for (let key in FILES) { jqXHRs.push($.get(FILES[key])) };
+    $.when.apply($, jqXHRs).always(function() {
+        $("#Modals").html(arguments[0][0]);
+        Jsons = { "category": arguments[1][0], "datatables_lang": arguments[2][0] };
+        DisplayStatus.splash(true); // Splash Top
+        DataList.init();
+    });
+
+    // variable
+    for (let key in Defaults) PoiData[key] = {};
+
     // Set Window Size
     console.log("Window Width: " + window.innerWidth);
     let use_H, magni = window.innerWidth < 768 ? 0.7 : 1;
@@ -76,13 +82,6 @@ $(document).ready(function() {
             $("#dataid").css("height", dat_H + "px");
             break;
     }
-
-    // initialize variable
-    glot = new Glottologist();
-    for (let key in Defaults) PoiData[key] = {};
-
-    // Splash Top
-    DisplayStatus.splash(true);
 
     // initialize leaflet
     console.log("initialize leaflet.");
@@ -156,6 +155,7 @@ $(document).ready(function() {
     $(window).resize(DisplayStatus.window_resize);
 
     // 翻訳
+    glot = new Glottologist();
     glot.import("./data/glot.json").then(() => { glot.render() }); // translation
 
     // 引数の位置情報を元にマップを移動
