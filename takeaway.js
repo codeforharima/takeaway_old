@@ -81,6 +81,9 @@ $(document).ready(function() {
     glot = new Glottologist();
     for (let key in Defaults) PoiData[key] = {};
 
+    // Splash Top
+    DisplayStatus.splash(true);
+
     // initialize leaflet
     console.log("initialize leaflet.");
     map = L.map('mapid', { center: DefaultCenter, zoom: 14, maxZoom: 20 });
@@ -91,7 +94,6 @@ $(document).ready(function() {
         style: 'https://api.maptiler.com/maps/3c10e59f-b7de-4ca9-b95b-75e30257f090/style.json?key=Eq2IyrHsOEGFU1W1fvd7'
     }).addTo(map);
     map.zoomControl.setPosition("bottomright");
-    hash = new L.Hash(map);
     L.control.locate({ position: 'bottomright', strings: { title: "現在地を表示" }, locateOptions: { maxZoom: 16 } }).addTo(map);
     L.control.scale({ imperial: false, maxWidth: 200 }).addTo(map);
 
@@ -106,12 +108,11 @@ $(document).ready(function() {
             default:
                 LL.busy = true;
                 if (Takeaway.status() == "initialize") {
-                    DisplayStatus.splash(true);
                     Takeaway.get("", () => {
                         DataList.view(DataList_Targets);
                         DisplayStatus.splash(false);
+                        LL.busy = false;
                     });
-                    LL.busy = false;
                 } else {
                     LL.id = setTimeout(() => {
                         Takeaway.get("", () => { DataList.view(DataList_Targets) });
@@ -156,5 +157,14 @@ $(document).ready(function() {
 
     // 翻訳
     glot.import("./data/glot.json").then(() => { glot.render() }); // translation
+
+    // 引数の位置情報を元にマップを移動
+    if (location.hash == "") { // 引数が無い場合
+        hash = new L.Hash(map);
+        map.panTo(DefaultCenter, { animate: false });
+    } else {
+        hash = new L.Hash(map);
+    }
+
 
 });
