@@ -164,7 +164,7 @@ var OvPassCnt = (function () {
 							let osmxml = arguments[i++][0]
 							let geojson = osmtogeojson(osmxml, { flatProperties: true });
 							geojson.features.forEach(function (val) { delete val.id; }); // delete Unnecessary osmid
-							geojson = geojson.features.filter(val => {
+							geojson = geojson.features.filter(val => {		// 非対応の店舗はキャッシュに載せない
 								if (Takeaway.get_catname(val.properties) !== "") return val;
 							});
 							Cache[key] = { "features": geojson };
@@ -330,7 +330,11 @@ var DisplayStatus = (function () {
 				};
 				morezoom.addTo(map);
 			};
-			$("#morezoom").html("<h1>" + message + "</h1>");
+			if (message !== "") {
+				$("#morezoom").html("<h1>" + message + "</h1>");
+			} else {
+				$("#morezoom").html("");
+			};
 		}
 	}
 })();
