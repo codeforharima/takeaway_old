@@ -9,7 +9,8 @@ var Jsons = {} // Download Jsons
 var glot;
 
 // consts
-const DefaultCenter = [35.02234, 135.96162];
+const DefaultCenter = [34.76573, 134.80989,];
+const DefaultZoom = 13;
 
 const MinZoomLevel = 14; // これ未満のズームレベルでは地図は作らない
 const MoreZoomMsg = "ズームすると店舗が表示されます。";
@@ -85,7 +86,7 @@ $(document).ready(function() {
 
     // initialize leaflet
     console.log("initialize leaflet.");
-    map = L.map('mapid', { center: DefaultCenter, zoom: 14, maxZoom: 20 });
+    map = L.map('mapid', { center: DefaultCenter, zoom: DefaultZoom, maxZoom: 20 });
     gl = L.mapboxGL({
         container: 'map',
         attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">© MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap contributors</a>',
