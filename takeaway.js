@@ -22,11 +22,11 @@ const OverPass = {
 };
 
 const Defaults = { // 制御情報の保管場所
-    TAK: { zoom: 15, icon: "./image/bentou.svg" },
-    DEL: { zoom: 15, icon: "./image/delivery.svg" },
-    DEF: { zoom: 15, icon: "./image/bentou.svg" },
+    TAK: { zoom: 14, icon: "./image/bentou.svg" },
+    DEL: { zoom: 14, icon: "./image/delivery.svg" },
+    DEF: { zoom: 14, icon: "./image/bentou.svg" },
     VND: { zoom: 17, icon: "./image/vending.svg" },
-    LIB: { zoom: 15, icon: "./image/library.svg" },
+    LIB: { zoom: 14, icon: "./image/library.svg" },
 };
 const DataList_Targets = ["TAK", "DEL", "DEF", "LIB"];     // リストに掲載する対象(自販機は無し)
 
