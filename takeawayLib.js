@@ -1,13 +1,15 @@
 "use strict";
 
-var Takeaway = (function() {
+var Takeaway = (function () {
 
     var _status = "initialize";
     const OUTSEETS = ["yes", "no"]; // outseetタグ用
+    const RegexPTN = [[/Mo/g, "月"], [/Tu/g, "火"], [/We/g, "水"], [/Th/g, "木"], [/Fr/g, "金"],
+    [/Sa/g, "土"], [/Su/g, "日"], [/;/g, "<br>"], [/PH/g, "祝日"], [/off/g, "休業"], [/24\/7/g, "24時間営業"]];
 
     return {
         status: () => { return _status }, // ステータスを返す
-        get: function(keys, callback) { // 情報（アイコンなど）を地図に追加
+        get: function (keys, callback) { // 情報（アイコンなど）を地図に追加
             console.log("Takeaway: get start...");
             _status = "get";
             var targets = [];
@@ -19,25 +21,25 @@ var Takeaway = (function() {
             if (map.getZoom() < MinZoomLevel) {
                 console.log("Takeaway: get end(MinZoomLevel).");
                 Takeaway.update();
-                _status = "";
                 callback();
             } else {
                 OvPassCnt.get(targets).then(geojson => {
                     targets.forEach(key => { PoiData[key].geojson = geojson[key] });
                     Takeaway.update();
                     console.log("Takeaway: get end.");
-                    _status = "";
                     callback();
                 }).catch((jqXHR, statusText, errorThrown) => {
                     console.log("Takeaway: get Error. " + statusText);
+                    Takeaway.update();
+                    callback();
                 });
             }
         },
 
         // Update Takeout Map Icon
-        update: function(targetkey) {
+        update: function (targetkey) {
             let ZoomLevel = map.getZoom();
-            if (targetkey == "" || typeof(targetkey) == "undefined") { // no targetkey then update all layer
+            if (targetkey == "" || typeof (targetkey) == "undefined") { // no targetkey then update all layer
                 for (let key in Defaults) {
                     Marker.all_delete(key);
                     if (Defaults[key].zoom <= ZoomLevel) Marker.set(key);
@@ -46,38 +48,40 @@ var Takeaway = (function() {
                 Marker.all_delete(targetkey);
                 if (Defaults[targetkey].zoom <= ZoomLevel) Marker.set(targetkey);
             }
+            _status = "";
         },
 
-        view: function(tags) {
+        view: function (tags) {
             _status = "view";
             DataList.select(tags.id);
 
             $("#osmid").html(tags.id);
-            $("#name").html(tags.name == null ? "" : tags.name);
+            $("#name").html(tags.name == null ? "-" : tags.name);
+            $("#category-icon").attr("src", tags.takeaway_icon);
             $("#category").html(Takeaway.get_catname(tags));
 
-            let openhour = tags.opening_hours == null ? "" : tags.opening_hours;
+            let openhour = tags.opening_hours == null ? "-" : tags.opening_hours;
             RegexPTN.forEach(val => { openhour = openhour.replace(val[0], val[1]) });
             $("#opening_hours").html(openhour);
 
-            let delname = tags.delivery == null ? "" : Jsons.category.delivery[tags.delivery];
+            let delname = tags.delivery == null ? "-" : Config.category.delivery[tags.delivery];
             $("#delivery").html(delname);
 
-            let outseet = OUTSEETS.indexOf(tags.outdoor_seating) < 0 ? "" : tags.outdoor_seating;
+            let outseet = OUTSEETS.indexOf(tags.outdoor_seating) < 0 ? "-" : tags.outdoor_seating;
             $("#outdoor_seating").html(outseet);
-            $("#outdoor_seating").attr("glot-model", "outdoor_seating_" + outseet);
+            if (outseet !== "-") $("#outdoor_seating").attr("glot-model","outdoor_seating_" + outseet);
 
             $("#phone").attr('href', tags.phone == null ? "" : "tel:" + tags.phone);
-            $("#phone_view").html(tags.phone == null ? "" : tags.phone);
+            $("#phone_view").html(tags.phone == null ? "-" : tags.phone);
 
             $("#url").attr('href', tags.website == null ? "" : tags.website);
-            $("#url_view").html(tags.website == null ? "" : tags.website);
+            $("#url_view").html(tags.website == null ? "-" : tags.website);
 
-            $("#description").html(tags.description == null ? "" : tags.description);
+            $("#description").html(tags.description == null ? "-" : tags.description);
 
             glot.render();
             $('#PoiView_Modal').modal({ backdrop: 'static', keyboard: true });
-            $('#PoiView_Modal').one('hidePrevented.bs.modal', function(e) {
+            $('#PoiView_Modal').one('hidePrevented.bs.modal', function (e) {
                 _status = "";
                 $('#PoiView_Modal').modal('hide');
             });
@@ -86,25 +90,25 @@ var Takeaway = (function() {
         openmap: osmid => {
             let poi = Marker.get(osmid);
             let zoom = map.getZoom();
-            window.open('https://www.google.com/maps/search/' + poi.tag.name + "/@" + poi.ll.lat + ',' + poi.ll.lng + ',' + zoom + 'z');
+            let name = poi.tag.name == undefined ? "" : "search/" + poi.tag.name + "/";
+            window.open('https://www.google.com/maps/' + name + "@" + poi.ll.lat + ',' + poi.ll.lng + ',' + zoom + 'z');
         },
 
-        // get Category Name from Jsons.category(Global Variable)
-        get_catname: function(tags) {
+        // get Category Name from Config.category(Global Variable)
+        get_catname: function (tags) {
             let catname = "";
             var key1 = tags.amenity == undefined ? "shop" : "amenity";
             var key2 = tags[key1] == undefined ? "" : tags[key1];
             if (key2 !== "") { // known tags
-                catname = Jsons.category[key1][key2];
+                catname = Config.category[key1][key2];
                 if (catname == undefined) catname = "";
             }
             return catname;
         },
 
         // 2点間の距離を計算(参考: https://qiita.com/chiyoyo/items/b10bd3864f3ce5c56291)
-        calc_between: function(ll1, ll2) {
-            let pi = Math.PI,
-                r = 6378137.0; // πと赤道半径
+        calc_between: function (ll1, ll2) {
+            let pi = Math.PI, r = 6378137.0; // πと赤道半径
             let radLat1 = ll1.lat * (pi / 180); // 緯度１
             let radLon1 = ll1.lng * (pi / 180); // 経度１
             let radLat2 = ll2.lat * (pi / 180); // 緯度２
@@ -117,18 +121,18 @@ var Takeaway = (function() {
 })();
 
 // make Marker
-var Marker = (function() {
+var Marker = (function () {
     var PointUp = { radius: 8, color: '#000080', fillColor: '#0000A0', Opacity: 0.1, fillOpacity: 0.1 };
     var latlngs = {},
         alltags = {}; // 緯度経度とタグ(key=osmid)
 
     return {
         get: osmid => { return { ll: latlngs[osmid], tag: alltags[osmid] } },
-        set: function(key) {
+        set: function (key) {
             let geojson = PoiData[key].geojson;
             let markers = [];
             if (geojson !== undefined) {
-                geojson.features.forEach(function(node) {
+                geojson.features.forEach(function (node) {
                     let tags = node.properties;
                     let icon = L.divIcon({ className: 'icon', html: '<img class="icon" src="' + Defaults[key].icon + '">' });
                     if (node.geometry.type == "Polygon") {
@@ -137,6 +141,7 @@ var Marker = (function() {
                         latlngs[tags.id] = { "lat": node.geometry.coordinates[1], "lng": node.geometry.coordinates[0] };
                     }
                     alltags[tags.id] = tags;
+                    alltags[tags.id].takeaway_icon = Defaults[key].icon;   // icon情報を埋め込み(詳細情報表示で利用)
                     markers.push(L.marker(new L.LatLng(latlngs[tags.id].lat, latlngs[tags.id].lng), { icon: icon, draggable: false }));
                     markers[markers.length - 1].addTo(map).on('click', e => Takeaway.view(e.target.takeaway_tags));
                     markers[markers.length - 1].takeaway_tags = tags;
@@ -145,14 +150,14 @@ var Marker = (function() {
             }
         },
 
-        all_delete: function(key) { // all delete
+        all_delete: function (key) { // all delete
             if (PoiData[key].markers !== undefined) {
                 PoiData[key].markers.forEach(marker => marker.remove(map));
                 PoiData[key].markers = undefined;
             }
         },
 
-        list: function(targets) {
+        list: function (targets) {
             let datas = [];
             targets.forEach(key => {
                 if (PoiData[key].markers !== undefined) {
@@ -175,19 +180,42 @@ var Marker = (function() {
             return datas;
         },
 
-        center: function(osmid) {
+        center: (osmid) => {
             map.panTo(latlngs[osmid], { animate: true, easeLinearity: 0.1, duration: 0.5 });
             PointUp.radius = Math.pow(2, 21 - map.getZoom());
             let circle = L.circle(latlngs[osmid], PointUp).addTo(map);
             setTimeout(() => map.removeLayer(circle), 2000);
+        },
+
+        event_move: (e) => {                // map.moveend発生時のイベント
+            console.log("moveend: event start.");
+            LL.NW = map.getBounds().getNorthWest();
+            LL.SE = map.getBounds().getSouthEast();
+            switch (LL.busy) {
+                case true:
+                    clearTimeout(LL.id);    // no break and cancel old timer.
+                default:
+                    LL.busy = true;
+                    if (Takeaway.status() == "initialize") {
+                        Takeaway.get("", () => {
+                            DataList.view(DataList_Targets);
+                            DisplayStatus.splash(false);
+                            LL.busy = false;
+                        });
+                    } else {
+                        LL.id = setTimeout(() => {
+                            Takeaway.get("", () => { DataList.view(DataList_Targets) });
+                            LL.busy = false;
+                        }, 1000);
+                    }
+            }
         }
     }
 })();
 
 // PoiDatalist管理
-var DataList = (function() {
-    var table, _status = "",
-        _lock = false;
+var DataList = (function () {
+    var table, _status = "", _lock = false, timeout = 0
 
     return {
         status: () => { return _status }, // statusを返す
@@ -214,24 +242,18 @@ var DataList = (function() {
         make_select: result => {
             // 店舗種別リストを作成
             let shops = [];
-            /*
-            Object.keys(Jsons.category.filter_targets).forEach((key1) => {
-            	key1 = Jsons.category.filter_targets[key1];
-            	Object.keys(Jsons.category[key1]).forEach(key2 => { shops.push(Jsons.category[key1][key2]) });
-            });
-             */
             DisplayStatus.clear_select("category_list");
             shops = result.map(data => { return data.category });
             shops = shops.filter((x, i, self) => { return self.indexOf(x) === i });
             shops.map(shop => DisplayStatus.add_select("category_list", shop, shop));
         },
-        view: function(targets) { // PoiDataのリスト表示
+        view: function (targets) { // PoiDataのリスト表示
             DataList.lock(true);
             if (table !== undefined) table.destroy();
             let result = Marker.list(targets);
             table = $('#tableid').DataTable({
                 "autoWidth": true,
-                "columns": [{ title: "名前", data: "name", "width": "40%" }, { title: "種類", data: "category", "width": "30%" }, { title: "距離", data: "between", "width": "20%" }, ],
+                "columns": [{ title: "名前", data: "name", "width": "40%" }, { title: "種類", data: "category", "width": "30%" }, { title: "距離", data: "between", "width": "20%" },],
                 "columnDefs": [{ targets: 2, render: $.fn.dataTable.render.number(',', '.', 0, '', 'm') }],
                 "data": result,
                 "processing": true,
@@ -239,7 +261,7 @@ var DataList = (function() {
                 "destroy": true,
                 "deferRender": true,
                 "dom": 't',
-                "language": Jsons.datatables_lang,
+                "language": Config.datatables_lang,
                 "order": [2, 'asc'],
                 "ordering": false,
                 "orderClasses": false,
@@ -248,13 +270,13 @@ var DataList = (function() {
                 "pageLength": 100000,
                 "select": 'single',
                 "scrollCollapse": true,
-                "scrollY": ($("#dataid").height() - 30) + "px"
+                "scrollY": ($("#dataid").height() - 32) + "px"
             });
             DataList.make_select(result);
             let osmid = table.row(0).data() == undefined ? undefined : table.row(0).data().osmid;
             if (osmid !== undefined) DataList.select(osmid); // osmidがあれば1行目を選択
 
-            table.on('select', function(e, dt, type, indexes) {
+            table.on('select', function (e, dt, type, indexes) {
                 if (_lock) {
                     table.row(indexes).deselect();
                 } else if (_status == "") {
@@ -267,7 +289,7 @@ var DataList = (function() {
 
         },
 
-        select: function(osmid) { // アイコンをクリックした時にデータを選択
+        select: function (osmid) { // アイコンをクリックした時にデータを選択
             _status = "select";
             table.rows().deselect();
             let datas = table.data(),
@@ -289,13 +311,13 @@ var DataList = (function() {
 })();
 
 // OverPass Server Control(Width easy cache)
-var OvPassCnt = (function() {
+var OvPassCnt = (function () {
 
     var Cache = {}; // geojson cache area
     var LLc = { "NW": { "lat": 0, "lng": 0 }, "SE": { "lat": 0, "lng": 0 } }; // latlng cache area
 
     return {
-        get: function(targets) {
+        get: function (targets) {
             return new Promise((resolve, reject) => {
                 let ZoomLevel = map.getZoom();
                 let LayerCounts = Object.keys(Defaults).length;
@@ -311,7 +333,7 @@ var OvPassCnt = (function() {
                     // Not With Cache range
                     DisplayStatus.progress(0);
                     Cache = {}; // Cache Clear
-                    let magni = (ZoomLevel - MinZoomLevel) < 1 ? 0.25 : (ZoomLevel - MinZoomLevel) / 2;
+                    let magni = (ZoomLevel - MinZoomLevel) < 1 ? 0.125 : (ZoomLevel - MinZoomLevel) / 4;
                     let offset_lat = (LL.NW.lat - LL.SE.lat) * magni;
                     let offset_lng = (LL.SE.lng - LL.NW.lng) * magni;
                     let SE_lat = LL.SE.lat - offset_lat;
@@ -330,7 +352,7 @@ var OvPassCnt = (function() {
                         // console.log("GET: " + url);
                         jqXHRs.push($.get(url, () => { DisplayStatus.progress(Math.ceil(((++Progress + 1) * 100) / LayerCounts)) }));
                     });
-                    $.when.apply($, jqXHRs).done(function() {
+                    $.when.apply($, jqXHRs).done(function () {
                         let i = 0;
                         targets.forEach(key => {
                             let arg = arguments[0][1] == undefined ? arguments[1] : arguments[i][1];
@@ -340,7 +362,7 @@ var OvPassCnt = (function() {
                             };
                             let osmxml = arguments[i++][0]
                             let geojson = osmtogeojson(osmxml, { flatProperties: true });
-                            geojson.features.forEach(function(val) { delete val.id; }); // delete Unnecessary osmid
+                            geojson.features.forEach(function (val) { delete val.id; }); // delete Unnecessary osmid
                             geojson = geojson.features.filter(val => { // 非対応の店舗はキャッシュに載せない
                                 if (Takeaway.get_catname(val.properties) !== "") return val;
                             });
@@ -349,7 +371,7 @@ var OvPassCnt = (function() {
                         console.log("OvPassCnt: Cache Update");
                         DisplayStatus.progress(0);
                         resolve(Cache);
-                    }).fail(function(jqXHR, statusText, errorThrown) {
+                    }).fail(function (jqXHR, statusText, errorThrown) {
                         console.log(statusText);
                         reject(jqXHR, statusText, errorThrown);
                     });
@@ -360,26 +382,33 @@ var OvPassCnt = (function() {
 })();
 
 // Display Status(progress&message)
-var DisplayStatus = (function() {
+var DisplayStatus = (function () {
     return {
         splash: (mode) => {
-            switch (mode) {
-                case true:
-                    $('#Splash_Modal').modal({ backdrop: 'static', keyboard: false });
-                    break;
-                default:
-                    $('#Splash_Modal').modal('hide');
-                    break;
-            }
+            $("#splash_image").attr("src", Config.local.SplashImage);
+            let act = mode ? { backdrop: 'static', keyboard: false } : 'hide';
+            $('#Splash_Modal').modal(act);
         },
+        make_menu: () => {
+            Object.keys(Config.menu).forEach(key => {
+                $("#temp_menu>a:first").attr("href", Config.menu[key].linkto);
+                $("#temp_menu>a>span:first").attr("glot-model", Config.menu[key]["glot-model"]);
+                let link = $("#temp_menu>a:first").clone();
+                $("#temp_menu").append(link);
+                if (Config.menu[key]["divider"]) $("#temp_menu>div:first").clone().appendTo($("#temp_menu"));
+            });
+            $("#temp_menu>a:first").remove();
+            $("#temp_menu>div:first").remove();
+        },
+
         progress: percent => {
-            percent = percent == 0 ? 1 : percent;
+            percent = percent == 0 ? 0.1 : percent;
             $('#Progress_Bar').css('width', parseInt(percent) + "%");
         },
         morezoom: message => {
             if (!$("#morezoom").length) {
                 let morezoom = L.control({ position: "topleft" });
-                morezoom.onAdd = function(map) {
+                morezoom.onAdd = function (map) {
                     this.ele = L.DomUtil.create('div', "morezoom");
                     this.ele.id = "morezoom";
                     return this.ele;
@@ -393,17 +422,17 @@ var DisplayStatus = (function() {
             };
         },
         add_select: (domid, text, value) => {
-            let select = document.getElementById(domid);
             let option = document.createElement("option");
             option.text = text;
             option.value = value;
-            select.appendChild(option);
+            document.getElementById(domid).appendChild(option);
         },
         clear_select: (domid) => {
             $('#' + domid + ' option').remove();
             $('#' + domid).append($('<option>').html("---").val("-"));
         },
-        fwindow_resize: () => {
+        window_resize: () => {
+            console.log("Window Width: " + window.innerWidth);
             let use_H, magni = window.innerWidth < 768 ? 0.7 : 1;
             switch (magni) {
                 case 1: // 横画面
@@ -413,7 +442,7 @@ var DisplayStatus = (function() {
                     break;
 
                 default: // 縦画面
-                    use_H = window.innerHeight - 90;
+                    use_H = window.innerHeight - 80;
                     let map_H = Math.round(use_H * magni);
                     let dat_H = use_H - map_H;
                     $("#mapid").css("height", map_H + "px");
