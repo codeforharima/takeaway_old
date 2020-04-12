@@ -18,7 +18,7 @@ var Takeaway = (function () {
             } else {
                 targets = keys;
             };
-            if (map.getZoom() < MinZoomLevel) {
+            if (map.getZoom() < Config.local.MinZoomLevel) {
                 console.log("Takeaway: get end(MinZoomLevel).");
                 Takeaway.update();
                 callback();
@@ -333,7 +333,7 @@ var OvPassCnt = (function () {
                     // Not With Cache range
                     DisplayStatus.progress(0);
                     Cache = {}; // Cache Clear
-                    let magni = (ZoomLevel - MinZoomLevel) < 1 ? 0.125 : (ZoomLevel - MinZoomLevel) / 4;
+                    let magni = (ZoomLevel - Config.local.MinZoomLevel) < 1 ? 0.125 : (ZoomLevel - Config.local.MinZoomLevel) / 4;
                     let offset_lat = (LL.NW.lat - LL.SE.lat) * magni;
                     let offset_lng = (LL.SE.lng - LL.NW.lng) * magni;
                     let SE_lat = LL.SE.lat - offset_lat;

@@ -8,7 +8,6 @@ var LL = {};                // latlng
 var Config = {}              // Download Config
 
 // consts
-const MinZoomLevel = 15; // これ未満のズームレベルでは地図は作らない
 const MoreZoomMsg = "ズームすると店舗が表示されます。";
 const OvGetError = "サーバーからのデータ取得に失敗しました。やり直してください。";
 const OvServer = 'https://overpass.kumi.systems/api/interpreter' // or 'https://overpass-api.de/api/interpreter' or 'https://overpass.nchc.org.tw/api/interpreter'
@@ -69,7 +68,6 @@ $(document).ready(function () {
         // 引数の位置情報を元にマップを移動
         if (location.hash == "") { // 引数が無い場合
             hash = new L.Hash(map);
-            //map.panTo(Config.local.DefaultCenter, { animate: false });
             Marker.event_move();
         } else {
             hash = new L.Hash(map);
@@ -84,7 +82,7 @@ $(document).ready(function () {
 
         // ズーム時のメッセージ表示
         map.on('zoomend', function (e) {
-            if (map.getZoom() < MinZoomLevel) {
+            if (map.getZoom() < Config.local.MinZoomLevel) {
                 DisplayStatus.morezoom(MoreZoomMsg);
             } else {
                 DisplayStatus.morezoom("");
